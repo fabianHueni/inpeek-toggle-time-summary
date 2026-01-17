@@ -133,7 +133,7 @@ function renderCopyScript(): string {
           // Second click: copy time
           copyToClipboard(time);
           const element = document.querySelector(\`[data-id="\${elementId}"]\`);
-          showCopyFeedback(element, 'Time copied! Click again for description.');
+          showCopyFeedback(element, 'Time copied!');
 
         } else {
           // First click: copy description
