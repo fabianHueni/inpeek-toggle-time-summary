@@ -1,5 +1,16 @@
+# Dependencies
 node_modules/
+
+# Build output (not needed for GitHub Pages)
 dist/
+
+# Environment variables (not used in client-side mode, but kept for safety)
 .env
+
+# Logs
 *.log
+
+# OS files
 .DS_Store
+
+# Note: docs/ folder is NOT ignored - it contains the GitHub Pages deployment

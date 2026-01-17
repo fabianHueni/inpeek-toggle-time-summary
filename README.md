@@ -2,7 +2,7 @@
 
 A browser-based web app that fetches time entries from the Toggl Track API, aggregates them by project and day, and displays them in a clean UI with Swiss date formatting and interactive copy features.
 
-## Features
+## ✨ Features
 
 ### Data Fetching & Processing
 - Fetches time entries from Toggl Track API v9
@@ -16,276 +16,276 @@ A browser-based web app that fetches time entries from the Toggl Track API, aggr
   - **By Day**: Shows days with projects nested inside
   - **By Project**: Shows projects with days nested inside
 - **Smart Copy Functionality**:
-  - Click once on a card → copies time in decimal format
-  - Click twice quickly → copies the description text
+  - Click once on a card → copies description
+  - Click twice quickly → copies the time in decimal format
   - Click directly on time badge → copies only the time value
   - Visual feedback shows what was copied
 - **Swiss Date Format**: Dates displayed as DD.MM.YYYY (e.g., 17.01.2026)
 - **Description Formatting**: Multiple descriptions concatenated with " / " and newlines
+- **Custom Color Scheme**: Professional blue, green, purple, and dark blue palette
 - Clean, responsive design that works on desktop and mobile
 
-### Navigation
-- Easy switching between date ranges
-- Toggle between "By Day" and "By Project" views
-- All selections preserved in URL query parameters
+### Multi-User Support
+- Each user enters their own Toggl API token
+- Tokens stored securely in browser localStorage
+- No backend required - all processing happens in the browser
+- Perfect for sharing with teams
 
-## Prerequisites
+## 🎨 Color Scheme
 
-- Node.js (v16 or higher)
-- npm or yarn
+- **Blue** (#39B2B9): Primary actions, highlights
+- **Green** (#97D700): Success states, save button
+- **Purple** (#A64D85): Accents, clear button
+- **Dark Blue** (#13294B): Headers, titles
+- **Gray** (#4A4A4A): Text, labels
+
+## 🚀 Quick Start
+
+### Option 1: GitHub Pages (Recommended)
+
+Deploy to GitHub Pages for free hosting:
+
+```bash
+# Install dependencies
+npm install
+
+# Build static HTML
+npm run build:static
+
+# Follow deployment guide
+```
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed GitHub Pages deployment instructions.
+
+### Option 2: Local Development
+
+Run locally for testing:
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Open http://localhost:3000
+```
+
+## 📋 Prerequisites
+
+- Node.js (v16 or higher) - only for development/building
+- npm or yarn - only for development/building
 - A Toggl Track account with API access
+- Modern web browser (Chrome, Firefox, Edge, Safari)
 
-## Setup Instructions
+## 🔑 Getting Your Toggl API Token
 
-### 1. Get Your Toggl API Token
+Each user needs their own API token:
 
 1. Log in to [Toggl Track](https://track.toggl.com/)
-2. Go to your Profile settings
-3. Scroll down to find your API token
-4. Copy the token
+2. Go to Profile settings
+3. Scroll down to find the API token
+4. Copy and paste it into the app's Settings section
 
-### 2. Install Dependencies
+The token is stored in your browser's localStorage and never sent to any server except Toggl's API.
 
-```bash
-npm install
-```
+## 💻 Usage Guide
 
-### 3. Configure Environment Variables
+### First Time Setup
 
-Create a `.env` file in the project root:
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` and add your Toggl API token:
-
-```env
-TOGGL_API_TOKEN=your_api_token_here
-PORT=3000
-```
-
-### 4. Run the Application
-
-#### Development Mode (with hot reload)
-
-```bash
-npm run dev
-```
-
-#### Production Mode
-
-Build and run:
-
-```bash
-npm run build
-npm start
-```
-
-### 5. View the App
-
-Open your browser and navigate to:
-
-```
-http://localhost:3000
-```
-
-## Usage Guide
+1. Open the app in your browser
+2. Scroll to the Settings section at the bottom
+3. Enter your Toggl API token
+4. Click "Save & Load Data"
+5. Your time entries will load automatically
 
 ### Switching Date Ranges
 
-Use the navigation buttons at the top to switch between:
-- **Current Week**: Monday to Sunday of the current week
-- **Last Week**: Monday to Sunday of the previous week
-- **Current Month**: First to last day of the current month
-- **Last Month**: First to last day of the previous month
+Use the navigation buttons at the top:
+- **Current Week**: Monday to Sunday of this week
+- **Last Week**: Monday to Sunday of last week
+- **Current Month**: First to last day of this month
+- **Last Month**: First to last day of last month
 
 ### Switching Views
 
-Toggle between:
+Toggle between two views:
 - **By Day**: See all projects for each day
 - **By Project**: See all days for each project
 
 ### Copying Data
 
-The app provides flexible copy functionality:
+Three ways to copy:
 
-1. **Copy Time + Description (two-click)**:
-   - Click once on a project/day card → time copied
-   - Click again within 1 second → description copied
-   - Use this to quickly paste time and then paste description
+1. **Copy Description + Time (two-click)**:
+   - Click once on a card → description copied
+   - Click again within 1 second → time copied
 
 2. **Copy Time Only (single-click)**:
-   - Click directly on the time badge (the colored hour display)
-   - Copies just the decimal hour value (e.g., "3.50")
+   - Click directly on the time badge
+   - Copies just the decimal hours (e.g., "3.50")
 
 3. **Visual Feedback**:
-   - A tooltip appears showing what was copied
-   - "Time copied! Click again for description." or "Description copied!"
+   - Tooltip shows what was copied
+   - "Description copied! Click again for time."
+   - "Time copied!"
 
-## Project Structure
+### Managing Settings
+
+Settings section at the bottom:
+- **Hide/Show**: Toggle settings visibility
+- **Save & Load Data**: Save your token and fetch data
+- **Clear**: Remove your saved token
+- **Persistent Storage**: Token saved in localStorage
+
+## 📁 Project Structure
 
 ```
 toggl-time-summary/
 ├── src/
-│   ├── index.ts           # Express server with route handling
-│   ├── toggl-client.ts    # Toggl API v9 client
-│   ├── date-utils.ts      # Date calculations & Swiss formatting
-│   ├── aggregator.ts      # Time entry aggregation & organization
-│   └── template.ts        # HTML rendering for both views
-├── .env.example           # Example environment variables
-├── .gitignore
-├── package.json
-├── tsconfig.json
-└── README.md
+│   ├── index.ts              # Express server (dev only)
+│   └── client-side-app.ts    # Main app logic & UI
+├── scripts/
+│   └── build-static.js       # Build script for GitHub Pages
+├── docs/
+│   └── index.html            # Generated static HTML (GitHub Pages)
+├── package.json              # Dependencies
+├── tsconfig.json             # TypeScript config
+├── README.md                 # This file
+└── DEPLOYMENT.md             # GitHub Pages deployment guide
 ```
 
-## How It Works
+## 🛠️ Development
 
-### 1. Toggl API Client (`toggl-client.ts`)
+### Running Locally
 
-- Authenticates using Basic Auth with your API token
-- Fetches time entries for a given date range
-- Fetches project information to get project names
-- Uses Toggl Track API v9 endpoints
+```bash
+# Install dependencies
+npm install
 
-### 2. Date Utilities (`date-utils.ts`)
+# Start dev server with hot reload
+npm run dev
 
-- Calculates date ranges (current/last week, current/last month)
-- Formats dates in Swiss style (DD.MM.YYYY)
-- Extracts dates from ISO 8601 timestamps
-- Handles local timezone conversions
+# Open http://localhost:3000
+```
 
-### 3. Aggregation Logic (`aggregator.ts`)
+### Building for Deployment
 
-Groups time entries by project and day, then for each group:
+```bash
+# Build TypeScript
+npm run build
 
-- **Description Processing**:
-  - Filters out null/empty descriptions
-  - Deduplicates identical descriptions
-  - Concatenates with " / \n" separator
-- **Duration Calculation**:
-  - Sums all entry durations
-  - Converts from seconds to hours
-  - Rounds to 2 decimal places
-- **Dual Organization**:
-  - `organizeByDay()`: Groups by day, then project
-  - `organizeByProject()`: Groups by project, then day
+# Generate static HTML for GitHub Pages
+npm run build:static
+```
 
-### 4. Server & Routes (`index.ts`)
+The `build:static` script creates `docs/index.html` - a standalone HTML file with all code embedded.
 
-- Express server handles query parameters:
-  - `?range=current-week|last-week|current-month|last-month`
-  - `?view=by-day|by-project`
-- Fetches data from Toggl API
-- Renders appropriate view based on query parameters
+### Making Changes
 
-### 5. UI Templates (`template.ts`)
+1. Edit `src/client-side-app.ts`
+2. Test locally with `npm run dev`
+3. Build static HTML with `npm run build:static`
+4. Deploy by pushing `docs/index.html` to GitHub
 
-- Server-side HTML rendering with embedded JavaScript
-- Two view renderers:
-  - `renderDayView()`: Day-centric layout
-  - `renderProjectView()`: Project-centric layout
-- Copy functionality implemented with vanilla JavaScript
-- Responsive CSS for mobile and desktop
+## 🔒 Security & Privacy
 
-## API Reference
+### How It Works
 
-### Toggl Track API v9
+- **Client-Side Only**: All code runs in your browser
+- **No Backend**: No server processes or stores your data
+- **Direct API Calls**: Browser communicates directly with Toggl API
+- **LocalStorage**: API tokens stored in browser storage
+- **HTTPS**: GitHub Pages provides secure HTTPS
 
-The app uses the following Toggl API endpoints:
+### What's Stored
+
+- **In Your Browser**: Your Toggl API token (localStorage)
+- **On Our Server**: Nothing - there is no server!
+- **On Toggl's Servers**: Your time tracking data (as usual)
+
+### Security Best Practices
+
+- ✅ API token stays in your browser
+- ✅ Token never sent to our server (there isn't one!)
+- ✅ Direct HTTPS connection to Toggl API
+- ✅ Clear token anytime from settings
+- ✅ Each user manages their own token
+- ⚠️ Don't share your API token with others
+- ⚠️ Use HTTPS when hosting (GitHub Pages does this automatically)
+
+## 🌐 Browser Compatibility
+
+Tested and working on:
+- ✅ Chrome/Edge (recommended)
+- ✅ Firefox
+- ✅ Safari
+- ✅ Opera
+
+Requires:
+- JavaScript enabled
+- LocalStorage enabled
+- Modern browser (ES6+ support)
+
+## 🐛 Troubleshooting
+
+### "Failed to load data" Error
+
+- Verify your API token is correct
+- Check that you have time entries in the selected date range
+- Ensure your browser allows API calls to Toggl (CORS)
+- Try a different browser
+
+### Token Not Saving
+
+- Check that localStorage is enabled
+- Some browsers block localStorage in private/incognito mode
+- Clear browser cache and try again
+
+### Copy Not Working
+
+- Modern browsers require HTTPS for clipboard access
+- GitHub Pages provides HTTPS automatically
+- Check browser console (F12) for errors
+
+### No Time Entries Showing
+
+- Make sure you have time entries logged in Toggl
+- Check the selected date range
+- Try switching to a different date range
+- Verify entries have valid start/stop times (not running)
+
+## 📚 API Reference
+
+Uses Toggl Track API v9:
 
 - `GET /api/v9/me/time_entries` - Fetch time entries
-  - Query params: `start_date`, `end_date` (YYYY-MM-DD)
-- `GET /api/v9/me/projects` - Fetch all projects
+  - Params: `start_date`, `end_date` (YYYY-MM-DD)
+- `GET /api/v9/me/projects` - Fetch projects
 
-Authentication: Basic Auth with API token as username and "api_token" as password.
+Authentication: Basic Auth with API token
 
-More details: [Toggl API Documentation](https://developers.track.toggl.com/docs/)
+Documentation: [Toggl API Docs](https://developers.track.toggl.com/docs/)
 
-## Example Screenshots
+## 🤝 Contributing
 
-### By Day View
-Shows each day as a section with project cards inside:
-```
-Monday - 15.01.2026                    7.75h total
-┌──────────────────────────────────────────┐
-│ Project Alpha               3.50h        │
-│ Feature development / Bug fixes          │
-└──────────────────────────────────────────┘
-┌──────────────────────────────────────────┐
-│ Project Beta                4.25h        │
-│ Code review / Documentation              │
-└──────────────────────────────────────────┘
-```
+Contributions are welcome! Feel free to:
+- Report bugs
+- Suggest features
+- Submit pull requests
+- Improve documentation
 
-### By Project View
-Shows each project as a section with day entries inside:
-```
-Project Alpha                           15.25h total
-┌──────────────────────────────────────────┐
-│ Monday • 15.01.2026          3.50h       │
-│ Feature development / Bug fixes          │
-└──────────────────────────────────────────┘
-┌──────────────────────────────────────────┐
-│ Tuesday • 16.01.2026         4.75h       │
-│ Code review / Testing                    │
-└──────────────────────────────────────────┘
-```
-
-## Troubleshooting
-
-### "Toggl API error (401)"
-
-- Check that your `TOGGL_API_TOKEN` in `.env` is correct
-- Verify you copied the token correctly (no extra spaces)
-
-### "Failed to fetch time entries"
-
-- Ensure you have internet connectivity
-- Check that Toggl Track API is accessible
-- Verify your API token has not expired
-
-### No time entries showing
-
-- Make sure you have time entries logged in the selected date range
-- Check the date range in console logs
-- Verify time entries have valid start/stop times (not running)
-
-### Copy functionality not working
-
-- Ensure your browser supports the Clipboard API
-- Check browser console for JavaScript errors
-- Try using a modern browser (Chrome, Firefox, Edge, Safari)
-
-## Development
-
-### Code Quality
-
-The codebase follows these principles:
-
-- **Separation of Concerns**: API client, business logic, and presentation are separate modules
-- **Type Safety**: Full TypeScript with strict mode
-- **Clarity**: Comments explain Toggl API usage and aggregation logic
-- **Simplicity**: Minimal dependencies, no over-engineering
-
-### Adding Custom Date Ranges
-
-To add a custom date range option:
-
-1. Add the range logic in `date-utils.ts` (e.g., `getLastQuarter()`)
-2. Add the case in `index.ts` `getDateRange()` function
-3. Add the button in `template.ts` `renderNavigation()` function
-
-### Testing Locally
-
-1. Make sure you have time entries in Toggl for your selected range
-2. Run `npm run dev`
-3. Open `http://localhost:3000`
-4. Check the console for debug logs
-5. Try different date ranges and views
-6. Test the copy functionality
-
-## License
+## 📄 License
 
 ISC
+
+## 🙏 Acknowledgments
+
+- Built with vanilla JavaScript (no frameworks!)
+- Toggl Track API for time tracking data
+- Swiss date format for professional display
+- Custom color scheme for brand consistency
+
+---
+
+**Made with ❤️ for better time tracking**

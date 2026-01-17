@@ -1,0 +1,1228 @@
+/**
+ * Client-Side App Template
+ *
+ * Generates a fully self-contained client-side version of the app
+ * where users provide their own API tokens stored in localStorage.
+ *
+ * Brand Colors:
+ * - Blue: #39B2B9
+ * - Green: #97D700
+ * - Purple: #A64D85
+ * - Dark Blue: #13294B
+ * - Gray: #4A4A4A
+ */
+
+export function renderClientSideApp(): string {
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Toggl Time Summary</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: #f5f5f5;
+      color: #4A4A4A;
+      line-height: 1.6;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(19, 41, 75, 0.1);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #13294B 0%, #A64D85 100%);
+      color: white;
+      padding: 30px;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .header .subtitle {
+      opacity: 0.9;
+      font-size: 14px;
+    }
+
+    /* Loading and error states */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #4A4A4A;
+    }
+
+    .loading-spinner {
+      border: 3px solid #f3f4f6;
+      border-top: 3px solid #39B2B9;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .error-message {
+      background: #fee;
+      border: 1px solid #fcc;
+      border-radius: 6px;
+      padding: 15px;
+      margin: 20px 30px;
+      color: #c33;
+    }
+
+    /* Navigation */
+    .navigation {
+      background: #f9fafb;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 20px 30px;
+    }
+
+    .nav-section {
+      margin-bottom: 15px;
+    }
+
+    .nav-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .nav-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #4A4A4A;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .nav-btn {
+      display: inline-block;
+      padding: 8px 16px;
+      background: white;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      color: #4A4A4A;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .nav-btn:hover {
+      background: #f3f4f6;
+      border-color: #39B2B9;
+      color: #39B2B9;
+    }
+
+    .nav-btn.active {
+      background: #39B2B9;
+      border-color: #39B2B9;
+      color: white;
+    }
+
+    /* Summary */
+    .week-summary {
+      background: #f9fafb;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 20px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .week-summary .week-range {
+      font-size: 14px;
+      color: #4A4A4A;
+    }
+
+    .week-summary .week-total {
+      font-size: 18px;
+      font-weight: 600;
+      color: #39B2B9;
+    }
+
+    /* Content */
+    .content {
+      padding: 30px;
+    }
+
+    .day-section, .project-section {
+      margin-bottom: 30px;
+    }
+
+    .day-section:last-child, .project-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .day-header, .project-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+
+    .day-name, .project-name-header {
+      font-size: 20px;
+      font-weight: 600;
+      color: #13294B;
+    }
+
+    .day-meta, .project-meta {
+      display: flex;
+      gap: 16px;
+      align-items: baseline;
+    }
+
+    .day-date {
+      font-size: 14px;
+      color: #4A4A4A;
+    }
+
+    .day-total, .project-total-header {
+      font-size: 14px;
+      font-weight: 600;
+      color: #39B2B9;
+    }
+
+    .no-entries {
+      color: #9ca3af;
+      font-style: italic;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .projects-container, .days-container {
+      display: grid;
+      gap: 12px;
+    }
+
+    .project-card, .day-entry {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      padding: 16px;
+      transition: all 0.2s;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .project-card:hover, .day-entry:hover {
+      border-color: #39B2B9;
+      box-shadow: 0 2px 4px rgba(57, 178, 185, 0.2);
+      background: #fefefe;
+    }
+
+    .project-header-row, .day-entry-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+    }
+
+    .project-name, .day-entry-day {
+      font-size: 16px;
+      font-weight: 600;
+      color: #13294B;
+    }
+
+    .project-hours, .day-entry-hours {
+      font-size: 15px;
+      font-weight: 600;
+      color: #39B2B9;
+      background: rgba(57, 178, 185, 0.1);
+      padding: 4px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .project-hours:hover, .day-entry-hours:hover {
+      background: rgba(57, 178, 185, 0.2);
+      transform: scale(1.05);
+    }
+
+    .project-descriptions, .day-entry-descriptions {
+      font-size: 14px;
+      color: #4A4A4A;
+      line-height: 1.6;
+      white-space: pre-line;
+    }
+
+    .copy-feedback {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(19, 41, 75, 0.9);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      pointer-events: none;
+      z-index: 1000;
+      transition: opacity 0.3s;
+      white-space: nowrap;
+    }
+
+    /* Footer with Settings */
+    .footer-section {
+      background: #f9fafb;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .footer-info {
+      padding: 16px 30px;
+      text-align: center;
+      font-size: 13px;
+      color: #9ca3af;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    /* Settings Section */
+    .settings-section {
+      background: #fffbeb;
+      border-top: 2px solid #97D700;
+      padding: 20px 30px;
+    }
+
+    .settings-section.hidden {
+      display: none;
+    }
+
+    .settings-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .settings-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #13294B;
+    }
+
+    .settings-toggle {
+      background: transparent;
+      border: none;
+      color: #39B2B9;
+      cursor: pointer;
+      font-size: 14px;
+      text-decoration: underline;
+      font-weight: 500;
+    }
+
+    .settings-toggle:hover {
+      color: #2A9199;
+    }
+
+    .settings-form {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+
+    .form-group {
+      flex: 1;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #13294B;
+      margin-bottom: 5px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #39B2B9;
+      box-shadow: 0 0 0 2px rgba(57, 178, 185, 0.1);
+    }
+
+    .btn-save, .btn-clear {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-save {
+      background: #97D700;
+      color: white;
+    }
+
+    .btn-save:hover {
+      background: #82BA00;
+    }
+
+    .btn-clear {
+      background: #A64D85;
+      color: white;
+    }
+
+    .btn-clear:hover {
+      background: #8C3D6F;
+    }
+
+    .settings-help {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #4A4A4A;
+    }
+
+    .settings-help a {
+      color: #39B2B9;
+      text-decoration: underline;
+    }
+
+    .settings-help a:hover {
+      color: #2A9199;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 0;
+      }
+
+      .container {
+        border-radius: 0;
+      }
+
+      .header, .content {
+        padding: 20px;
+      }
+
+      .navigation, .settings-section, .footer-info {
+        padding: 15px 20px;
+      }
+
+      .settings-form {
+        flex-direction: column;
+      }
+
+      .week-summary {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .day-header, .project-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+      }
+
+      .day-meta, .project-meta {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .nav-buttons {
+        gap: 6px;
+      }
+
+      .nav-btn {
+        padding: 6px 12px;
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Toggl Time Summary</h1>
+      <div class="subtitle">Time tracking made simple</div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading" id="loadingState" style="display: none;">
+      <div class="loading-spinner"></div>
+      <div>Loading your time entries...</div>
+    </div>
+
+    <!-- Error Message -->
+    <div class="error-message" id="errorMessage" style="display: none;"></div>
+
+    <!-- Main App Content -->
+    <div id="appContent" style="display: none;">
+      <!-- Navigation -->
+      <div id="navigationContainer"></div>
+
+      <!-- Summary -->
+      <div id="summaryContainer"></div>
+
+      <!-- Content -->
+      <div class="content" id="mainContent"></div>
+    </div>
+
+    <!-- Footer with Settings -->
+    <div class="footer-section">
+      <div class="footer-info">
+        Click on a card to copy description, click again to copy time • Click only on time badge to copy decimal hours
+      </div>
+
+      <!-- Settings Section -->
+      <div class="settings-section" id="settingsSection">
+        <div class="settings-header">
+          <div class="settings-title">⚙️ Settings</div>
+          <button class="settings-toggle" id="settingsToggle">Hide</button>
+        </div>
+        <form class="settings-form" id="settingsForm">
+          <div class="form-group">
+            <label for="apiToken">Toggl API Token</label>
+            <input
+              type="password"
+              id="apiToken"
+              placeholder="Enter your Toggl API token"
+              autocomplete="off"
+            />
+          </div>
+          <button type="submit" class="btn-save">Save & Load Data</button>
+          <button type="button" class="btn-clear" id="clearBtn">Clear</button>
+        </form>
+        <div class="settings-help">
+          Get your API token from
+          <a href="https://track.toggl.com/profile" target="_blank" rel="noopener">
+            Toggl Profile Settings
+          </a>
+          • Your token is stored securely in your browser
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    ${generateClientSideScript()}
+  </script>
+</body>
+</html>
+  `;
+}
+
+function generateClientSideScript(): string {
+  return `
+    // ===== State Management =====
+    let currentApiToken = null;
+    let currentRange = 'last-week';
+    let currentView = 'by-day';
+    let timeEntries = [];
+    let projects = [];
+
+    // ===== LocalStorage Management =====
+    const STORAGE_KEY = 'toggl_api_token';
+
+    function saveApiToken(token) {
+      try {
+        localStorage.setItem(STORAGE_KEY, token);
+      } catch (e) {
+        console.error('Failed to save API token:', e);
+      }
+    }
+
+    function loadApiToken() {
+      try {
+        return localStorage.getItem(STORAGE_KEY);
+      } catch (e) {
+        console.error('Failed to load API token:', e);
+        return null;
+      }
+    }
+
+    function clearApiToken() {
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+      } catch (e) {
+        console.error('Failed to clear API token:', e);
+      }
+    }
+
+    // ===== Date Utilities =====
+    function formatDate(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return \`\${year}-\${month}-\${day}\`;
+    }
+
+    function formatDateSwiss(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return \`\${day}.\${month}.\${year}\`;
+    }
+
+    function toSwissFormat(isoDate) {
+      const date = new Date(isoDate + 'T00:00:00');
+      return formatDateSwiss(date);
+    }
+
+    function getCurrentCalendarWeek() {
+      const today = new Date();
+      const currentDayOfWeek = today.getDay();
+      const daysToThisMonday = currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1;
+
+      const thisMonday = new Date(today);
+      thisMonday.setDate(today.getDate() - daysToThisMonday);
+
+      const thisSunday = new Date(thisMonday);
+      thisSunday.setDate(thisMonday.getDate() + 6);
+
+      return {
+        start: formatDate(thisMonday),
+        end: formatDate(thisSunday)
+      };
+    }
+
+    function getLastCalendarWeek() {
+      const today = new Date();
+      const currentDayOfWeek = today.getDay();
+      const daysToLastMonday = currentDayOfWeek === 0 ? 6 : currentDayOfWeek + 6;
+
+      const lastMonday = new Date(today);
+      lastMonday.setDate(today.getDate() - daysToLastMonday);
+
+      const lastSunday = new Date(lastMonday);
+      lastSunday.setDate(lastMonday.getDate() + 6);
+
+      return {
+        start: formatDate(lastMonday),
+        end: formatDate(lastSunday)
+      };
+    }
+
+    function getCurrentMonth() {
+      const today = new Date();
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+      const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+      return {
+        start: formatDate(firstDay),
+        end: formatDate(lastDay)
+      };
+    }
+
+    function getLastMonth() {
+      const today = new Date();
+      const firstDay = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const lastDay = new Date(today.getFullYear(), today.getMonth(), 0);
+
+      return {
+        start: formatDate(firstDay),
+        end: formatDate(lastDay)
+      };
+    }
+
+    function getDateRange(range) {
+      switch (range) {
+        case 'current-week':
+          return { range: getCurrentCalendarWeek(), label: 'Current Week' };
+        case 'current-month':
+          return { range: getCurrentMonth(), label: 'Current Month' };
+        case 'last-month':
+          return { range: getLastMonth(), label: 'Last Month' };
+        case 'last-week':
+        default:
+          return { range: getLastCalendarWeek(), label: 'Last Week' };
+      }
+    }
+
+    function getDatesInRange(start, end) {
+      const dates = [];
+      const startDate = new Date(start + 'T00:00:00');
+      const endDate = new Date(end + 'T00:00:00');
+
+      const current = new Date(startDate);
+      while (current <= endDate) {
+        dates.push(formatDate(current));
+        current.setDate(current.getDate() + 1);
+      }
+
+      return dates;
+    }
+
+    function getDayName(dateStr) {
+      const date = new Date(dateStr + 'T00:00:00');
+      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      return days[date.getDay()];
+    }
+
+    function extractDate(isoDatetime) {
+      const date = new Date(isoDatetime);
+      return formatDate(date);
+    }
+
+    // ===== Toggl API Client =====
+    async function fetchTogglData(endpoint, token) {
+      const credentials = btoa(\`\${token}:api_token\`);
+      const response = await fetch(\`https://api.track.toggl.com/api/v9\${endpoint}\`, {
+        method: 'GET',
+        headers: {
+          'Authorization': \`Basic \${credentials}\`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(\`Toggl API error (\${response.status}): \${errorText}\`);
+      }
+
+      return await response.json();
+    }
+
+    async function fetchTimeEntries(token, startDate, endDate) {
+      return await fetchTogglData(\`/me/time_entries?start_date=\${startDate}&end_date=\${endDate}\`, token);
+    }
+
+    async function fetchProjects(token) {
+      return await fetchTogglData('/me/projects', token);
+    }
+
+    // ===== Data Aggregation =====
+    function aggregateTimeEntries(entries, projectsMap) {
+      const grouped = new Map();
+
+      for (const entry of entries) {
+        if (entry.duration < 0) continue;
+
+        const date = extractDate(entry.start);
+        const projectId = entry.project_id ?? 'no-project';
+        const key = \`\${projectId}|\${date}\`;
+
+        if (!grouped.has(key)) {
+          grouped.set(key, []);
+        }
+        grouped.get(key).push(entry);
+      }
+
+      const summaries = [];
+      for (const [key, groupedEntries] of grouped) {
+        const [projectIdStr, date] = key.split('|');
+        const projectId = projectIdStr === 'no-project' ? null : parseInt(projectIdStr, 10);
+
+        let projectName = 'No Project';
+        if (projectId !== null && projectsMap.has(projectId)) {
+          projectName = projectsMap.get(projectId).name;
+        }
+
+        const descriptions = groupedEntries
+          .map(e => e.description)
+          .filter(desc => desc !== null && desc.trim() !== '')
+          .filter((desc, index, self) => self.indexOf(desc) === index);
+
+        const totalSeconds = groupedEntries.reduce((sum, entry) => sum + entry.duration, 0);
+        const hours = totalSeconds / 3600;
+
+        summaries.push({
+          projectId,
+          projectName,
+          date,
+          totalHours: Math.round(hours * 100) / 100,
+          descriptions: descriptions.join(' / \\n')
+        });
+      }
+
+      return summaries;
+    }
+
+    function organizeByDay(summaries, allDates) {
+      const daySummaries = [];
+
+      for (const date of allDates) {
+        const projectsForDay = summaries
+          .filter(s => s.date === date)
+          .sort((a, b) => a.projectName.localeCompare(b.projectName));
+
+        daySummaries.push({
+          date,
+          dayName: getDayName(date),
+          projects: projectsForDay
+        });
+      }
+
+      return daySummaries;
+    }
+
+    function organizeByProject(summaries, allDates) {
+      const projectMap = new Map();
+
+      for (const summary of summaries) {
+        const key = \`\${summary.projectId}|\${summary.projectName}\`;
+        if (!projectMap.has(key)) {
+          projectMap.set(key, []);
+        }
+        projectMap.get(key).push(summary);
+      }
+
+      const projectSummaries = [];
+      for (const [key, projectDays] of projectMap) {
+        const [projectIdStr, projectName] = key.split('|');
+        const projectId = projectIdStr === 'null' ? null : parseInt(projectIdStr, 10);
+
+        const days = projectDays
+          .sort((a, b) => a.date.localeCompare(b.date))
+          .map(pd => ({
+            date: pd.date,
+            dayName: getDayName(pd.date),
+            totalHours: pd.totalHours,
+            descriptions: pd.descriptions
+          }));
+
+        const totalHours = days.reduce((sum, day) => sum + day.totalHours, 0);
+
+        projectSummaries.push({
+          projectId,
+          projectName,
+          days,
+          totalHours: Math.round(totalHours * 100) / 100
+        });
+      }
+
+      return projectSummaries.sort((a, b) => a.projectName.localeCompare(b.projectName));
+    }
+
+    // ===== UI Rendering =====
+    function escapeHtml(text) {
+      const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      };
+      return text.replace(/[&<>"']/g, char => map[char]);
+    }
+
+    function renderNavigation() {
+      const ranges = [
+        { value: 'current-week', label: 'Current Week' },
+        { value: 'last-week', label: 'Last Week' },
+        { value: 'current-month', label: 'Current Month' },
+        { value: 'last-month', label: 'Last Month' }
+      ];
+
+      const rangeButtons = ranges.map(r => {
+        const isActive = currentRange === r.value;
+        return \`<button class="nav-btn \${isActive ? 'active' : ''}" onclick="changeRange('\${r.value}')">\${r.label}</button>\`;
+      }).join('');
+
+      const viewByDay = currentView === 'by-day';
+      const viewByProject = currentView === 'by-project';
+
+      return \`
+        <div class="navigation">
+          <div class="nav-section">
+            <label class="nav-label">Date Range:</label>
+            <div class="nav-buttons">
+              \${rangeButtons}
+            </div>
+          </div>
+          <div class="nav-section">
+            <label class="nav-label">View:</label>
+            <div class="nav-buttons">
+              <button class="nav-btn \${viewByDay ? 'active' : ''}" onclick="changeView('by-day')">By Day</button>
+              <button class="nav-btn \${viewByProject ? 'active' : ''}" onclick="changeView('by-project')">By Project</button>
+            </div>
+          </div>
+        </div>
+      \`;
+    }
+
+    function renderDayView(daySummaries, dateRange, rangeLabel) {
+      const swissStart = toSwissFormat(dateRange.start);
+      const swissEnd = toSwissFormat(dateRange.end);
+
+      const weekTotal = daySummaries.reduce((sum, day) =>
+        sum + day.projects.reduce((daySum, p) => daySum + p.totalHours, 0), 0
+      );
+
+      const daySections = daySummaries.map(day => {
+        const swissDate = toSwissFormat(day.date);
+
+        if (day.projects.length === 0) {
+          return \`
+            <div class="day-section">
+              <div class="day-header">
+                <h2 class="day-name">\${day.dayName}</h2>
+                <span class="day-date">\${swissDate}</span>
+              </div>
+              <p class="no-entries">No time entries</p>
+            </div>
+          \`;
+        }
+
+        const totalDayHours = day.projects.reduce((sum, p) => sum + p.totalHours, 0);
+        const projectCards = day.projects.map((p, idx) => {
+          const escapedDesc = escapeHtml(p.descriptions);
+          const cardId = \`day-\${day.date}-project-\${idx}\`;
+          return \`
+            <div class="project-card" data-id="\${cardId}" data-time="\${p.totalHours.toFixed(2)}" data-description="\${escapedDesc}">
+              <div class="project-header-row">
+                <h3 class="project-name">\${escapeHtml(p.projectName)}</h3>
+                <span class="project-hours" data-time="\${p.totalHours.toFixed(2)}">\${p.totalHours.toFixed(2)}h</span>
+              </div>
+              \${p.descriptions ? \`<p class="project-descriptions">\${escapedDesc}</p>\` : ''}
+            </div>
+          \`;
+        }).join('');
+
+        return \`
+          <div class="day-section">
+            <div class="day-header">
+              <h2 class="day-name">\${day.dayName}</h2>
+              <div class="day-meta">
+                <span class="day-date">\${swissDate}</span>
+                <span class="day-total">\${totalDayHours.toFixed(2)}h total</span>
+              </div>
+            </div>
+            <div class="projects-container">
+              \${projectCards}
+            </div>
+          </div>
+        \`;
+      }).join('');
+
+      document.getElementById('summaryContainer').innerHTML = \`
+        <div class="week-summary">
+          <div class="week-range">\${swissStart} to \${swissEnd}</div>
+          <div class="week-total">\${weekTotal.toFixed(2)}h total</div>
+        </div>
+      \`;
+
+      document.getElementById('mainContent').innerHTML = daySections;
+      setupCopyListeners();
+    }
+
+    function renderProjectView(projectSummaries, dateRange, rangeLabel) {
+      const swissStart = toSwissFormat(dateRange.start);
+      const swissEnd = toSwissFormat(dateRange.end);
+
+      const total = projectSummaries.reduce((sum, project) => sum + project.totalHours, 0);
+
+      const projectSections = projectSummaries.map(project => {
+        if (project.days.length === 0) {
+          return \`
+            <div class="project-section">
+              <div class="project-header">
+                <h2 class="project-name-header">\${escapeHtml(project.projectName)}</h2>
+                <span class="project-total-header">0.00h total</span>
+              </div>
+              <p class="no-entries">No time entries</p>
+            </div>
+          \`;
+        }
+
+        const dayEntries = project.days.map((d, idx) => {
+          const swissDate = toSwissFormat(d.date);
+          const escapedDesc = escapeHtml(d.descriptions);
+          const entryId = \`project-\${project.projectName}-day-\${idx}\`;
+          return \`
+            <div class="day-entry" data-id="\${entryId}" data-time="\${d.totalHours.toFixed(2)}" data-description="\${escapedDesc}">
+              <div class="day-entry-header">
+                <div>
+                  <span class="day-entry-day">\${d.dayName}</span>
+                  <span class="day-date"> • \${swissDate}</span>
+                </div>
+                <span class="day-entry-hours" data-time="\${d.totalHours.toFixed(2)}">\${d.totalHours.toFixed(2)}h</span>
+              </div>
+              \${d.descriptions ? \`<p class="day-entry-descriptions">\${escapedDesc}</p>\` : ''}
+            </div>
+          \`;
+        }).join('');
+
+        return \`
+          <div class="project-section">
+            <div class="project-header">
+              <h2 class="project-name-header">\${escapeHtml(project.projectName)}</h2>
+              <span class="project-total-header">\${project.totalHours.toFixed(2)}h total</span>
+            </div>
+            <div class="days-container">
+              \${dayEntries}
+            </div>
+          </div>
+        \`;
+      }).join('');
+
+      document.getElementById('summaryContainer').innerHTML = \`
+        <div class="week-summary">
+          <div class="week-range">\${swissStart} to \${swissEnd}</div>
+          <div class="week-total">\${total.toFixed(2)}h total</div>
+        </div>
+      \`;
+
+      document.getElementById('mainContent').innerHTML = projectSections;
+      setupCopyListeners();
+    }
+
+    // ===== Copy Functionality =====
+    const clickState = new Map();
+
+    function setupCopyListeners() {
+      document.querySelectorAll('.project-card, .day-entry').forEach(card => {
+        card.addEventListener('click', function(e) {
+          if (e.target.closest('.project-hours, .day-entry-hours')) return;
+          const time = this.dataset.time;
+          const description = this.dataset.description;
+          handleCopy(this.dataset.id, time, description);
+        });
+      });
+
+      document.querySelectorAll('.project-hours, .day-entry-hours').forEach(badge => {
+        badge.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const time = this.dataset.time;
+          copyToClipboard(time);
+          showCopyFeedback(this, 'Time copied!');
+        });
+      });
+    }
+
+    function handleCopy(elementId, time, description) {
+      const now = Date.now();
+      const state = clickState.get(elementId);
+
+      if (state && state.timeout) {
+        clearTimeout(state.timeout);
+      }
+
+      if (state && (now - state.lastClick) < 1000) {
+        copyToClipboard(time);
+        const element = document.querySelector(\`[data-id="\${elementId}"]\`);
+        showCopyFeedback(element, 'Time copied!');
+        clickState.delete(elementId);
+      } else {
+        copyToClipboard(description);
+        const element = document.querySelector(\`[data-id="\${elementId}"]\`);
+        showCopyFeedback(element, 'Description copied! Click again for time.');
+
+        const timeout = setTimeout(() => {
+          clickState.delete(elementId);
+        }, 1000);
+
+        clickState.set(elementId, {
+          lastClick: now,
+          timeout: timeout
+        });
+      }
+    }
+
+    function copyToClipboard(text) {
+      if (!text) return;
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).catch(err => {
+          console.error('Failed to copy:', err);
+          fallbackCopy(text);
+        });
+      } else {
+        fallbackCopy(text);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+      } catch (err) {
+        console.error('Fallback copy failed:', err);
+      }
+      document.body.removeChild(textarea);
+    }
+
+    function showCopyFeedback(element, message) {
+      if (!element) return;
+
+      const existing = element.querySelector('.copy-feedback');
+      if (existing) {
+        existing.remove();
+      }
+
+      const feedback = document.createElement('div');
+      feedback.className = 'copy-feedback';
+      feedback.textContent = message;
+      element.style.position = 'relative';
+      element.appendChild(feedback);
+
+      setTimeout(() => {
+        feedback.style.opacity = '0';
+        setTimeout(() => feedback.remove(), 300);
+      }, 1500);
+    }
+
+    // ===== Main App Logic =====
+    async function loadData() {
+      if (!currentApiToken) {
+        showError('Please enter your Toggl API token in the settings below.');
+        return;
+      }
+
+      showLoading(true);
+      hideError();
+
+      try {
+        const { range, label } = getDateRange(currentRange);
+
+        // Fetch data from Toggl
+        const entries = await fetchTimeEntries(currentApiToken, range.start, range.end);
+        const projectsList = await fetchProjects(currentApiToken);
+
+        // Store data
+        timeEntries = entries;
+        projects = projectsList;
+
+        // Build projects map
+        const projectsMap = new Map(projects.map(p => [p.id, p]));
+
+        // Aggregate
+        const summaries = aggregateTimeEntries(entries, projectsMap);
+        const allDates = getDatesInRange(range.start, range.end);
+
+        // Render based on view
+        document.getElementById('navigationContainer').innerHTML = renderNavigation();
+
+        if (currentView === 'by-project') {
+          const projectSummaries = organizeByProject(summaries, allDates);
+          renderProjectView(projectSummaries, range, label);
+        } else {
+          const daySummaries = organizeByDay(summaries, allDates);
+          renderDayView(daySummaries, range, label);
+        }
+
+        showApp(true);
+        showLoading(false);
+      } catch (error) {
+        console.error('Error loading data:', error);
+        showError(\`Failed to load data: \${error.message}\`);
+        showLoading(false);
+      }
+    }
+
+    function changeRange(range) {
+      currentRange = range;
+      loadData();
+    }
+
+    function changeView(view) {
+      currentView = view;
+      loadData();
+    }
+
+    function showLoading(show) {
+      document.getElementById('loadingState').style.display = show ? 'block' : 'none';
+    }
+
+    function showApp(show) {
+      document.getElementById('appContent').style.display = show ? 'block' : 'none';
+    }
+
+    function showError(message) {
+      const errorEl = document.getElementById('errorMessage');
+      errorEl.textContent = message;
+      errorEl.style.display = 'block';
+    }
+
+    function hideError() {
+      document.getElementById('errorMessage').style.display = 'none';
+    }
+
+    // ===== Settings Handlers =====
+    document.getElementById('settingsForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const token = document.getElementById('apiToken').value.trim();
+
+      if (!token) {
+        showError('Please enter your API token.');
+        return;
+      }
+
+      currentApiToken = token;
+      saveApiToken(token);
+      loadData();
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', function() {
+      if (confirm('Are you sure you want to clear your saved API token?')) {
+        currentApiToken = null;
+        clearApiToken();
+        document.getElementById('apiToken').value = '';
+        showApp(false);
+        showError('API token cleared. Please enter a new token to continue.');
+      }
+    });
+
+    document.getElementById('settingsToggle').addEventListener('click', function() {
+      const section = document.getElementById('settingsSection');
+      const isHidden = section.classList.contains('hidden');
+
+      if (isHidden) {
+        section.classList.remove('hidden');
+        this.textContent = 'Hide';
+      } else {
+        section.classList.add('hidden');
+        this.textContent = 'Show Settings';
+      }
+    });
+
+    // ===== Initialization =====
+    window.addEventListener('DOMContentLoaded', function() {
+      const savedToken = loadApiToken();
+      if (savedToken) {
+        currentApiToken = savedToken;
+        document.getElementById('apiToken').value = savedToken;
+        loadData();
+      } else {
+        showError('Welcome! Please enter your Toggl API token in the settings below to get started.');
+      }
+    });
+  `;
+}
