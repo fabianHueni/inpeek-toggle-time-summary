@@ -696,31 +696,33 @@ function generateClientSideScript(): string {
       return formatDate(date);
     }
 
-    // ===== Toggl API Client =====
-    async function fetchTogglData(endpoint, token) {
-      const credentials = btoa(\`\${token}:api_token\`);
-      const response = await fetch(\`https://api.track.toggl.com/api/v9\${endpoint}\`, {
+    // ===== Backend API Client =====
+    // Get the API base URL (use current origin or fallback to localhost for dev)
+    const API_BASE = window.location.origin;
+
+    async function fetchFromBackend(endpoint, token) {
+      const response = await fetch(\`\${API_BASE}\${endpoint}\`, {
         method: 'GET',
         headers: {
-          'Authorization': \`Basic \${credentials}\`,
           'Content-Type': 'application/json',
+          'X-Toggl-Api-Token': token,
         },
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(\`Toggl API error (\${response.status}): \${errorText}\`);
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || \`API error (\${response.status})\`);
       }
 
       return await response.json();
     }
 
     async function fetchTimeEntries(token, startDate, endDate) {
-      return await fetchTogglData(\`/me/time_entries?start_date=\${startDate}&end_date=\${endDate}\`, token);
+      return await fetchFromBackend(\`/api/time-entries?start_date=\${startDate}&end_date=\${endDate}\`, token);
     }
 
     async function fetchProjects(token) {
-      return await fetchTogglData('/me/projects', token);
+      return await fetchFromBackend('/api/projects', token);
     }
 
     // ===== Data Aggregation =====
